@@ -11,12 +11,18 @@ from rag_src.llm import GroqLLM
     not os.path.exists(r"tests/assests/sample1.pdf"),
     reason="PDF document missing for test",
 )
-@pytest.mark.parametrize("query,expected_category", [
-    ("What is the capital of France?", "Factual"),
-    ("Analyze the economic impact of COVID-19", "Analytical"),
-    ("What are different opinions on AI replacing jobs?", "Opinion"),
-    ("Given my background in physics, how should I learn machine learning?", "Contextual"),
-])
+@pytest.mark.parametrize(
+    "query,expected_category",
+    [
+        ("What is the capital of France?", "Factual"),
+        ("Analyze the economic impact of COVID-19", "Analytical"),
+        ("What are different opinions on AI replacing jobs?", "Opinion"),
+        (
+            "Given my background in physics, how should I learn machine learning?",
+            "Contextual",
+        ),
+    ],
+)
 def test_adaptive_rag_response_for_each_strategy(query, expected_category):
     load_dotenv()
     api_key = os.getenv("GROQ_API_KEY")
@@ -40,9 +46,11 @@ def test_adaptive_rag_response_for_each_strategy(query, expected_category):
 
     assert isinstance(answer, str), "Answer should be a string"
     assert len(answer.strip()) > 0, "Answer should not be empty"
-    
+
     if actual_category:
         print(f"\nQuery classified as: {actual_category}")
-        assert actual_category == expected_category, f"Expected: {expected_category}, Got: {actual_category}"
+        assert (
+            actual_category == expected_category
+        ), f"Expected: {expected_category}, Got: {actual_category}"
 
     print("\nAdaptiveRAG Answer:\n", answer)
