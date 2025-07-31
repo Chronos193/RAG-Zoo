@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 import os
 
 from rag_src.llm import BaseLLM, DefaultLLM
@@ -10,6 +10,7 @@ from rag_src.query_transformer import BaseQueryTransformer, LLMWebQueryTransform
 from rag_src.post_retrival_enricher import PostBaseEnricher, PostDefaultEnricher
 from rag_src.indexer import BaseIndexer, DefaultIndexer
 from rag_src.doc_loader import BaseDocLoader, DefaultDocLoader
+from rag_src.doc_loader.universal_doc_loader import UniversalDocLoader
 from rag_src.doc_preprocessor import BasePreprocessor, DefaultPreprocessor
 from rag_src.chunker import BaseChunker, DefaultChunker
 from rag_src.evaluator.base import BaseEvaluator
@@ -41,7 +42,8 @@ class CRAG:
         self.indexer = indexer or DefaultIndexer()
         self.query_transform = query_transform or LLMWebQueryTransformer(self.llm)
         self.doc_enricher = doc_enricher or PostDefaultEnricher()
-        self.doc_loader = doc_loader or DefaultDocLoader(self.docdir)
+        # Use UniversalDocLoader for better file format support (PDF, DOCX, etc.)
+        self.doc_loader = doc_loader or UniversalDocLoader(self.docdir)
         self.preprocessor = preprocessor or DefaultPreprocessor()
         self.chunker = chunker or DefaultChunker()
 
@@ -117,3 +119,23 @@ class CRAG:
 
         print(f"Step 4: Final Answer: {answer}")
         return answer
+
+    def ingest_documents(
+        self, documents: List[str], metadata: Optional[List[dict]] = None
+    ) -> None:
+        """Index documents using embedding + indexing pipeline"""
+        print("[INFO] Indexing documents...")
+        embeddings = self.embeddor.embed(documents)
+        self.indexer.index(embeddings, documents, metadata)
+        self.indexer.persist()
+        print("[INFO] Indexing complete.")
+
+    def load_and_ingest_documents(self) -> None:
+        """Load + preprocess + chunk + index documents"""
+        print("[INFO] Loading and processing documents...")
+        documents = self.doc_loader.load()
+        if self.preprocessor:
+            documents = self.preprocessor.preprocess(documents)
+        if self.chunker:
+            documents = self.chunker.chunk(documents)
+        self.ingest_documents(documents)

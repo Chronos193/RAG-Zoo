@@ -9,7 +9,7 @@ from rag_src.chunker import DefaultChunker
 
 
 @pytest.mark.skipif(
-    not os.path.exists(r"C:\Users\DELL\Downloads\final_draft.pdf"),
+    not os.path.exists(r"tests/assests/sample1.pdf"),
     reason="Document file not found",
 )
 def test_runrag_with_gemini():
